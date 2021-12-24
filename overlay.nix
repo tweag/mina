@@ -26,6 +26,9 @@ in {
       cp go.mod go.sum *.go $out/
     '';
   };
+  sodium-static = final.libsodium.overrideAttrs (o: {
+    dontDisableStatic = true;
+  });
 
   # Jobs/Test/Libp2pUnitTest
   libp2p_helper = pkgs.buildGoModule {
