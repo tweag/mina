@@ -17,7 +17,7 @@ in {
     # todo: buildgomodule?
     name = "libp2p_ipc-go";
     buildInputs = [ pkgs.capnproto pkgs.go-capnproto2 ];
-    src = ./src/libp2p_ipc;
+    src = ../src/libp2p_ipc;
     buildPhase = ''
       capnp compile -ogo -I${pkgs.go-capnproto2.src}/std libp2p_ipc.capnp
     '';
@@ -26,15 +26,16 @@ in {
       cp go.mod go.sum *.go $out/
     '';
   };
-  sodium-static = final.libsodium.overrideAttrs (o: {
+  sodium-static = pkgs.libsodium.overrideAttrs (o: {
     dontDisableStatic = true;
   });
 
+  # todo: kimchi
   # Jobs/Test/Libp2pUnitTest
   libp2p_helper = pkgs.buildGoModule {
     pname = "libp2p_helper";
     version = "0.1";
-    src = ./src/app/libp2p_helper/src;
+    src = ../src/app/libp2p_helper/src;
     runVend = true; # missing some schema files
     vendorSha256 = "sha256-g0DsuLMiXjUTsGbhCSeFKEFKMEMtg3UTUjmYwUka6iE=";
     postConfigure = ''
