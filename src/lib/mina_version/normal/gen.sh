@@ -1,14 +1,7 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-commit_id_short=$(git rev-parse --short=8 --verify HEAD)
-CWD=$PWD
-
-if [ -n "$MINA_BRANCH" ]; then
-  branch="$MINA_BRANCH"
-else
-  branch=$(git rev-parse --verify --abbrev-ref HEAD || echo "<none found>")
-fi
+branch="${MINA_BRANCH-$(git rev-parse --verify --abbrev-ref HEAD || echo "<unknown>")}"
 
 # we are nested 6 directories deep (_build/<context>/src/lib/mina_version/normal)
 pushd ../../../../../..
@@ -29,13 +22,15 @@ pushd ../../../../../..
   popd
 popd
 
-echo "let commit_id = \"$id\"" > "$1"
-echo "let commit_id_short = \"$commit_id_short\"" >> "$1"
-echo "let branch = \"$branch\"" >> "$1"
-echo "let commit_date = \"$commit_date\"" >> "$1"
+{
+    printf 'let commit_id = "%s"\n' "$id"
+    printf 'let commit_id_short = "%s"\n' "$commit_id_short"
+    printf 'let branch = "%s"\n' "$branch"
+    printf 'let commit_date = "%s"\n' "$commit_date"
 
-echo "let marlin_commit_id = \"$marlin_commit_id\"" >> "$1"
-echo "let marlin_commit_id_short = \"$marlin_commit_id_short\"" >> "$1"
-echo "let marlin_commit_date = \"$marlin_commit_date\"" >> "$1"
+    printf 'let marlin_commit_id = "%s"\n' "$marlin_commit_id"
+    printf 'let marlin_commit_id_short = "%s"\n' "$marlin_commit_id_short"
+    printf 'let marlin_commit_date = "%s"\n' "$marlin_commit_date"
 
-echo "let print_version () = Core_kernel.printf \"Commit %s on branch %s\n\" commit_id branch" >> "$1"
+    printf 'let print_version () = Core_kernel.printf "Commit %%s on branch %%s\\n" commit_id branch\n'
+} > "$1"
