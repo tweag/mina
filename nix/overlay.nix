@@ -1,9 +1,10 @@
 final: prev:
 let pkgs = final;
 in {
-  postgresql = prev.postgresql.override {
-    enableSystemd = false;
-  };
+  postgresql = final.pkgsBuildBuild.postgresql_12;
+
+  openssh = (prev.openssh.override { libredirect = ""; }).overrideAttrs
+    (_: { doCheck = false; });
 
   go-capnproto2 = pkgs.buildGoModule rec {
     pname = "capnpc-go";
@@ -30,9 +31,8 @@ in {
       cp go.mod go.sum *.go $out/
     '';
   };
-  sodium-static = pkgs.libsodium.overrideAttrs (o: {
-    dontDisableStatic = true;
-  });
+  sodium-static =
+    pkgs.libsodium.overrideAttrs (o: { dontDisableStatic = true; });
 
   # todo: kimchi
   # Jobs/Test/Libp2pUnitTest
