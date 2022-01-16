@@ -4,23 +4,21 @@ set -euo pipefail
 branch="${MINA_BRANCH-$(git rev-parse --verify --abbrev-ref HEAD || echo "<unknown>")}"
 
 # we are nested 6 directories deep (_build/<context>/src/lib/mina_version/normal)
-pushd ../../../../../..
-  if [ -n "$MINA_COMMIT_SHA1" ]; then
-    # pull from env var if set
-    id="$MINA_COMMIT_SHA1"
-  else
-    if [ ! -e .git ]; then echo 'Error: git repository not found'; exit 1; fi
-    id=$(git rev-parse --verify HEAD)
-    if [ -n "$(git diff --stat)" ]; then id="[DIRTY]$id"; fi
-  fi
-  commit_date=$(git show HEAD -s --format="%cI")
-  pushd src/lib/crypto/proof-systems
-    marlin_commit_id=$(git rev-parse --verify HEAD)
-    if [ -n "$(git diff --stat)" ]; then marlin_commit_id="[DIRTY]$id"; fi
-    marlin_commit_id_short=$(git rev-parse --short=8 --verify HEAD)
-    marlin_commit_date=$(git show HEAD -s --format="%cI")
-  popd
-popd
+root="${MINA_ROOT-$(git rev-parse --show-toplevel || echo ../../../../../..)}"
+
+pushd "$root" > /dev/null
+  id="${MINA_COMMIT_SHA1-$(git rev-parse --verify HEAD || echo "<unknown>")}"
+  commit_id_short="$(printf "%s" "$id" | cut -c1-8)"
+  if [[ -e .git ]] && ! git diff --quiet; then id="[DIRTY]$id"; fi
+  commit_date="${MINA_COMMIT_DATE-$(git show HEAD -s --format="%cI" || echo "<unknown>")}"
+
+  pushd src/lib/crypto/proof-systems > /dev/null
+    marlin_commit_id="${MARLIN_COMMIT_ID-$(git rev-parse --verify HEAD || echo "<unknown>")}"
+    marlin_commit_id_short="$(printf '%s' "$marlin_commit_id" | cut -c1-8)"
+    if [[ -e .git ]] && ! git diff --quiet; then marlin_commit_id="[DIRTY]$marlin_commit_id"; fi
+    marlin_commit_date="${MARLIN_COMMIT_DATE-$(git show HEAD -s --format="%cI" || echo "<unknown>")}"
+  popd > /dev/null
+popd > /dev/null
 
 {
     printf 'let commit_id = "%s"\n' "$id"
