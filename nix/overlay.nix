@@ -1,9 +1,11 @@
 final: prev:
 let pkgs = final;
 in {
+  # nixpkgs + musl problems
   postgresql =
     (prev.postgresql.override { enableSystemd = false; }).overrideAttrs
     (o: { doCheck = !prev.stdenv.hostPlatform.isMusl; });
+
   openssh = (if prev.stdenv.hostPlatform.isMusl then
     (prev.openssh.override {
       # todo: fix libredirect musl
@@ -25,11 +27,36 @@ in {
 
   git = prev.git.overrideAttrs
     (o: { doCheck = o.doCheck && !prev.stdenv.hostPlatform.isMusl; });
-  #mozillaOverlay = import (builtins.fetchTarball https://github.com/mozilla/nixpkgs-mozilla/archive/master.tar.gz); nixpkgs = import nixpkgs-unstable { overlays = [ mozillaOverlay ]; }; rust = (nixpkgs.rustChannelOf { channel = "nightly"; }).rust.override { targets = [ "x86_64-unknown-linux-musl" ]; }; rustPlatform = nixpkgs.makeRustPlatform { cargo = rust; rustc = rust; }; in nixpkgs.stdenv.mkDerivation { name = "rust-env"; nativeBuildInputs = [ rustPlatform.rust.cargo rustPlatform.rust.rustc nixpkgs.file ]; }
-  pkgs_normal = import (final.path) {
-    overlays = final.overlays;
-    system = "x86_64-linux";
-  };
+
+  # Overrides for dependencies
+
+  sodium-static =
+    pkgs.libsodium.overrideAttrs (o: { dontDisableStatic = true; });
+
+  rocksdb = (prev.rocksdb.override {
+    snappy = null;
+    lz4 = null;
+    zstd = null;
+    bzip2 = null;
+  }).overrideAttrs (_: {
+    cmakeFlags = [
+      "-DPORTABLE=1"
+      "-DWITH_JEMALLOC=0"
+      "-DWITH_JNI=0"
+      "-DWITH_BENCHMARK_TOOLS=0"
+      "-DWITH_TESTS=1"
+      "-DWITH_TOOLS=0"
+      "-DWITH_BZ2=0"
+      "-DWITH_LZ4=0"
+      "-DWITH_SNAPPY=0"
+      "-DWITH_ZLIB=0"
+      "-DWITH_ZSTD=0"
+      "-DWITH_GFLAGS=0"
+      "-DUSE_RTTI=1"
+    ];
+  });
+
+  # Rust stuff (for marlin_plonk_bindings_stubs)
   rust-musl = (((final.rustChannelOf {
     channel = "nightly";
     sha256 = "sha256-eKL7cdPXGBICoc9FGMSHgUs6VGMg+3W2y/rXN8TuuAI=";
@@ -45,10 +72,15 @@ in {
     })) // {
       inherit (prev.rust) toRustTarget toRustTargetSpec;
     };
+
   rustPlatform-musl = prev.makeRustPlatform {
     cargo = final.rust-musl;
     rustc = final.rust-musl;
   };
+
+  # Dependencies which aren't in nixpkgs and local packages which need networking to build
+
+
   go-capnproto2 = pkgs.buildGoModule rec {
     pname = "capnpc-go";
     version = "v3.0.0-alpha.1";
@@ -74,10 +106,11 @@ in {
       cp go.mod go.sum *.go $out/
     '';
   };
+
+  # todo: kimchi
   sodium-static =
     pkgs.libsodium.overrideAttrs (o: { dontDisableStatic = true; });
 
-  # todo: kimchi
   # Jobs/Test/Libp2pUnitTest
   libp2p_helper = pkgs.buildGoModule {
     pname = "libp2p_helper";
