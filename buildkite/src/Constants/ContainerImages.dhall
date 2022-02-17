@@ -11,4 +11,5 @@
   nodeToolchain = "node:14.13.1-stretch-slim",
   ubuntu1804 = "ubuntu:18.04",
   xrefcheck = "serokell/xrefcheck@sha256:8fbb35a909abc353364f1bd3148614a1160ef3c111c0c4ae84e58fdf16019eeb"
+  nix = "nixos/nix:2.6.0"
 }
