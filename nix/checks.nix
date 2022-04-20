@@ -55,7 +55,7 @@ inputs: pkgs: {
   require-ppxs = pkgs.stdenv.mkDerivation {
     name = "require-ppxs";
     # todo: only depend on dune files
-    src = ./.;
+    src = ../.;
     buildInputs = [ (pkgs.python3.withPackages (p: [ p.sexpdata ])) ];
     buildPhase = "python ./scripts/require-ppxs.py";
     installPhase = "touch $out";
