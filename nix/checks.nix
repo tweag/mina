@@ -11,15 +11,16 @@ inputs: pkgs: {
       bash ./scripts/lint_codeowners.sh
     '';
     installPhase = "touch $out";
+    meta.checkDescription = "CODEOWNERS file";
   };
   # todo: this check succeeds with 0 rfcs
-  lint-rfcs = pkgs.runCommand "lint-rfcs" { } ''
+  lint-rfcs = pkgs.runCommand "lint-rfcs" { meta.checkDescription = "RFCs"; } ''
     ln -s ${../rfcs} ./rfcs
     bash ${../scripts/lint_rfcs.sh}
     touch $out
   '';
   # todo: ./scripts/check-snarky-submodule.sh # submodule issue
-  lint-preprocessor-deps = pkgs.runCommand "lint-preprocessor-deps" { } ''
+  lint-preprocessor-deps = pkgs.runCommand "lint-preprocessor-deps" { meta.checkDescription = "preprocessor deps"; } ''
     ln -s ${../src} ./src
     bash ${../scripts/lint_preprocessor_deps.sh}
     touch $out
@@ -47,6 +48,7 @@ inputs: pkgs: {
     src = ../.;
     buildPhase = "make check-format";
     installPhase = "touch $out";
+    meta.checkDescription = "that OCaml code is formatted properly";
   };
 
   # todo: libp2p_ipc
@@ -57,6 +59,7 @@ inputs: pkgs: {
     buildInputs = [ (pkgs.python3.withPackages (p: [ p.sexpdata ])) ];
     buildPhase = "python ./scripts/require-ppxs.py";
     installPhase = "touch $out";
+    meta.checkDescription = "that dune files are preprocessed by ppx_version";
   };
 
 }
