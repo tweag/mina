@@ -63,32 +63,4 @@ inputs: pkgs: {
     installPhase = "touch $out";
     meta.checkDescription = "that dune files are preprocessed by ppx_version";
   };
-
-  module-sanity-check = pkgs.nixosTest {
-    name = "sanity-check";
-    nodes.daemon = {
-      imports = [ (import ./modules/mina.nix inputs) ];
-      services.mina = {
-        enable = true;
-        external-ip = "192.168.1.1";
-        extraArgs = [ "-seed" ];
-      };
-      time.timeZone = "UTC";
-      virtualisation = {
-        memorySize = 8192;
-        diskSize = 4096;
-      };
-    };
-    testScript = ''
-      start_all()
-      daemon.wait_for_unit("mina.service")
-      daemon.wait_for_open_port(8301)
-      daemon.succeed(
-          '${
-            inputs.self.packages.${pkgs.system}.default
-          }/bin/mina client status'
-      )
-    '';
-  };
-
-}
+} // import ./integration-tests.nix inputs pkgs
