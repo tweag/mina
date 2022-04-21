@@ -75,7 +75,7 @@ let
 
       runMinaCheck = { name ? "check", extraInputs ? [ ], extraArgs ? { } }:
         check:
-        self.mina.overrideAttrs (oa:
+        self.mina_reproducible_commit_info.overrideAttrs (oa:
           {
             pname = "mina-${name}";
             buildInputs = oa.buildInputs ++ extraInputs;
@@ -95,7 +95,7 @@ let
       rpc_parallel = super.rpc_parallel.overrideAttrs
         (oa: { buildInputs = oa.buildInputs ++ [ self.ctypes ]; });
 
-      mina = pkgs.stdenv.mkDerivation ({
+      mina_reproducible_commit_info = pkgs.stdenv.mkDerivation ({
         pname = "mina";
         version = "dev";
         # Prevent unnecessary rebuilds on non-source changes
@@ -103,9 +103,11 @@ let
 
         # TODO, get this from somewhere
         MARLIN_REPO_SHA = "<unknown>";
-        MINA_COMMIT_DATE =
-          if sourceInfo ? rev then sourceInfo.lastModifiedDate else "<unknown>";
-        MINA_COMMIT_SHA1 = sourceInfo.rev or "DIRTY";
+        #MINA_COMMIT_DATE =
+        #  if sourceInfo ? rev then sourceInfo.lastModifiedDate else "<unknown>";
+        #MINA_COMMIT_SHA1 = sourceInfo.rev or "DIRTY";
+        MINA_COMMIT_DATE = "__commit_date_";
+        MINA_COMMIT_SHA1 = "__commit_sha1___________________________";
         MINA_BRANCH = "<unknown>";
 
         buildInputs = ocaml-libs ++ external-libs;
@@ -147,6 +149,22 @@ let
         // pkgs.lib.optionalAttrs pkgs.stdenv.isDarwin {
           OCAMLPARAM = "_,cclib=-lc++";
         });
+
+      mina = pkgs.runCommand "mina-release" {
+        buildInputs = [ pkgs.makeWrapper ];
+      } ''
+        cp -R ${self.mina_reproducible_commit_info} $out
+        chmod 700 $out -R
+        for i in $(find "$out/bin" -type f); do
+          sed 's/__commit_sha1___________________________/${
+            inputs.self.sourceInfo.rev or "<unknown>                               "
+          }/' -i "$i"
+          sed 's/__commit_date_/${
+            inputs.self.sourceInfo.lastModifiedDate or "<unknown>     "
+          }/' -i "$i"
+          wrapProgram "$i" --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.gnutar pkgs.gzip ]}
+        done
+      '';
 
       mina_tests = runMinaCheck {
         name = "tests";
