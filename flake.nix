@@ -37,6 +37,7 @@
     }:
     {
       overlay = import ./nix/overlay.nix;
+      nixosModules.mina = import ./nix/modules/mina.nix inputs;
       pipeline = with flake-buildkite-pipeline.lib; {
         steps = flakeStepsCachix {
           pushToBinaryCaches = [ "mina-demo" ];

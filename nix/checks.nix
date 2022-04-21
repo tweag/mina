@@ -20,7 +20,9 @@ inputs: pkgs: {
     touch $out
   '';
   # todo: ./scripts/check-snarky-submodule.sh # submodule issue
-  lint-preprocessor-deps = pkgs.runCommand "lint-preprocessor-deps" { meta.checkDescription = "preprocessor deps"; } ''
+  lint-preprocessor-deps = pkgs.runCommand "lint-preprocessor-deps" {
+    meta.checkDescription = "preprocessor deps";
+  } ''
     ln -s ${../src} ./src
     bash ${../scripts/lint_preprocessor_deps.sh}
     touch $out
@@ -37,14 +39,14 @@ inputs: pkgs: {
     # todo: only depend on ./src
     name = "lint-check-format";
     buildInputs = with inputs.self.ocamlPackages.${pkgs.system}; [
-        ocaml
-        dune
-        base_quickcheck
-        ocamlfind
-        async
-        ocamlformat
-        ppx_jane
-      ];
+      ocaml
+      dune
+      base_quickcheck
+      ocamlfind
+      async
+      ocamlformat
+      ppx_jane
+    ];
     src = ../.;
     buildPhase = "make check-format";
     installPhase = "touch $out";
@@ -60,6 +62,34 @@ inputs: pkgs: {
     buildPhase = "python ./scripts/require-ppxs.py";
     installPhase = "touch $out";
     meta.checkDescription = "that dune files are preprocessed by ppx_version";
+  };
+
+  module-sanity-check = pkgs.nixosTest {
+    name = "sanity-check";
+    nodes.daemon = {
+      imports = [ (import ./modules/mina.nix inputs) ];
+      services.mina = {
+        enable = true;
+        external-ip = "0.0.0.0";
+        protocol-version = "0.0.0";
+        extraArgs = [ "-seed" ];
+      };
+      time.timeZone = "UTC";
+      virtualisation = {
+        memorySize = 8192;
+        diskSize = 4096;
+      };
+    };
+    testScript = ''
+      start_all()
+      daemon.wait_for_unit("mina.service")
+      daemon.wait_until_succeeds('sleep 40')
+      daemon.wait_until_succeeds(
+          '${
+            inputs.self.packages.${pkgs.system}.default
+          }/bin/mina client status'
+      )
+    '';
   };
 
 }
