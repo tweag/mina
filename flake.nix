@@ -191,8 +191,8 @@
         defaultPackage = ocamlPackages.mina;
         packages.default = ocamlPackages.mina;
 
-        devShell = ocamlPackages.mina;
-        devShells.default = ocamlPackages.mina;
+        devShell = ocamlPackages.mina-dev;
+        devShells.default = ocamlPackages.mina-dev;
         packages.impure-shell =
           (import ./nix/impure-shell.nix pkgs).inputDerivation;
         devShells.impure = import ./nix/impure-shell.nix pkgs;

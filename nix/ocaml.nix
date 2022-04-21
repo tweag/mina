@@ -95,7 +95,7 @@ let
       rpc_parallel = super.rpc_parallel.overrideAttrs
         (oa: { buildInputs = oa.buildInputs ++ [ self.ctypes ]; });
 
-      mina_reproducible_commit_info = pkgs.stdenv.mkDerivation ({
+      mina-dev = pkgs.stdenv.mkDerivation ({
         pname = "mina";
         version = "dev";
         # Prevent unnecessary rebuilds on non-source changes
@@ -152,9 +152,9 @@ let
 
       mina = pkgs.runCommand "mina-release" {
         buildInputs = [ pkgs.makeWrapper ];
-        outputs = self.mina_reproducible_commit_info.outputs;
+        outputs = self.mina-dev.outputs;
       } (map (output: ''
-        cp -R ${self.mina_reproducible_commit_info.${output}} ${placeholder output}
+        cp -R ${self.mina-dev.${output}} ${placeholder output}
         chmod 700 ${placeholder output} -R
         for i in $(find "${placeholder output}/bin" -type f); do
           sed 's/__commit_sha1___________________________/${
@@ -165,7 +165,7 @@ let
           }/' -i "$i"
           wrapProgram "$i" --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.gnutar pkgs.gzip ]}
         done
-      '') self.mina_reproducible_commit_info.outputs);
+      '') self.mina-dev.outputs);
 
       mina_tests = runMinaCheck {
         name = "tests";
