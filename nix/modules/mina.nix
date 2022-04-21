@@ -104,6 +104,7 @@ inputs:
         Group = "mina";
         StateDirectory = "mina";
         Type = "forking";
+        TimeoutStartSec = "15min";
       };
     };
   };
