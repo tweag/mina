@@ -51,6 +51,10 @@ inputs:
           type = bool;
           default = false;
         };
+        peers = lib.mkOption {
+          type = listOf (strMatching "/[^/]+/[^/]+/[^/]+/[^/]+/[^/]+/[^/]+");
+          default = [];
+        };
 
         waitForRpc = lib.mkOption {
           type = bool;
@@ -85,7 +89,8 @@ inputs:
           --rest-port ${toString cfg.rest-port} \
           ${optionalFlag "external-ip"} \
           ${optionalFlag "protocol-version"} \
-          ${optionalString cfg.disable-node-status "--disable-node-status"}
+          ${optionalString cfg.disable-node-status "--disable-node-status"} \
+          ${toString (map (peer: "--peer ${escapeShellArg peer}") cfg.peers)} \
           ${toString (map escapeShellArg cfg.extraArgs)} \
           &
         ${optionalString cfg.waitForRpc
