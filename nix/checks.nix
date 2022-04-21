@@ -82,8 +82,8 @@ inputs: pkgs: {
     testScript = ''
       start_all()
       daemon.wait_for_unit("mina.service")
-      daemon.wait_until_succeeds('sleep 40')
-      daemon.wait_until_succeeds(
+      daemon.wait_for_open_port(8301)
+      daemon.succeed(
           '${
             inputs.self.packages.${pkgs.system}.default
           }/bin/mina client status'
