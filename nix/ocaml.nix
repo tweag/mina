@@ -75,7 +75,7 @@ let
 
       runMinaCheck = { name ? "check", extraInputs ? [ ], extraArgs ? { } }:
         check:
-        self.mina_reproducible_commit_info.overrideAttrs (oa:
+        self.mina-dev.overrideAttrs (oa:
           {
             pname = "mina-${name}";
             buildInputs = oa.buildInputs ++ extraInputs;
@@ -185,7 +185,7 @@ let
         dune exec --profile=dev src/app/reformat/reformat.exe -- -path . -check
       '';
 
-      mina_client_sdk = self.mina.overrideAttrs (_: {
+      mina_client_sdk = self.mina-dev.overrideAttrs (_: {
         pname = "mina_client_sdk";
         version = "dev";
         src = filtered-src;
@@ -245,7 +245,7 @@ let
         '';
       };
 
-      mina_integration_tests = self.mina.overrideAttrs (oa: {
+      mina_integration_tests = self.mina-dev.overrideAttrs (oa: {
         pname = "mina_integration_tests";
         src = filtered-src;
         outputs = [ "out" ];
