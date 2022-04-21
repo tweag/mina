@@ -38,6 +38,22 @@
     {
       overlay = import ./nix/overlay.nix;
       nixosModules.mina = import ./nix/modules/mina.nix inputs;
+      nixosConfigurations.container = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          self.nixosModules.mina
+          {
+            boot.isContainer = true;
+            networking.useDHCP = false;
+            networking.firewall.enable = false;
+
+            services.mina = {
+              enable = true;
+              extraArgs = [ "--seed" ];
+            };
+          }
+        ];
+      };
       pipeline = with flake-buildkite-pipeline.lib; {
         steps = flakeStepsCachix {
           pushToBinaryCaches = [ "mina-demo" ];

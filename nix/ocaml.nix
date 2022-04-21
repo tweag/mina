@@ -150,20 +150,24 @@ let
           OCAMLPARAM = "_,cclib=-lc++";
         });
 
-      mina = pkgs.runCommand "mina-release" {
+      mina = let
+        commit_sha1 =
+          inputs.self.sourceInfo.rev or "<unknown>                               ";
+        commit_date =
+          inputs.self.sourceInfo.lastModifiedDate or "<unknown>     ";
+        inherit (pkgs.lib) makeBinPath;
+      in pkgs.runCommand "mina-release" {
         buildInputs = [ pkgs.makeWrapper ];
         outputs = self.mina-dev.outputs;
       } (map (output: ''
         cp -R ${self.mina-dev.${output}} ${placeholder output}
         chmod 700 ${placeholder output} -R
         for i in $(find "${placeholder output}/bin" -type f); do
-          sed 's/__commit_sha1___________________________/${
-            inputs.self.sourceInfo.rev or "<unknown>                               "
-          }/' -i "$i"
-          sed 's/__commit_date_/${
-            inputs.self.sourceInfo.lastModifiedDate or "<unknown>     "
-          }/' -i "$i"
-          wrapProgram "$i" --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.gnutar pkgs.gzip ]}
+          sed 's/__commit_sha1___________________________/${commit_sha1}/' -i "$i"
+          sed 's/__commit_date_/${commit_date}/' -i "$i"
+          wrapProgram "$i" \
+            --prefix PATH : ${makeBinPath [ pkgs.gnutar pkgs.gzip ]} \
+            --set MINA_LIBP2P_HELPER_PATH ${pkgs.libp2p_helper}/bin/libp2p_helper
         done
       '') self.mina-dev.outputs);
 

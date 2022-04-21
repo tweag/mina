@@ -8,6 +8,7 @@ _build*
 *.install
 .merlin*
 result
+.tmp
 *.ignore
 *.log
 *.aux

@@ -70,7 +70,7 @@ inputs: pkgs: {
       imports = [ (import ./modules/mina.nix inputs) ];
       services.mina = {
         enable = true;
-        external-ip = "0.0.0.0";
+        external-ip = "192.168.1.1";
         protocol-version = "0.0.0";
         extraArgs = [ "-seed" ];
       };

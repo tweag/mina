@@ -20,11 +20,15 @@ inputs:
         external-ip = lib.mkOption {
           type = nullOr
             (strMatching "[0-9]{0,3}[.][0-9]{0,3}[.][0-9]{0,3}[.][0-9]{0,3}");
+          default = null;
         };
         protocol-version = lib.mkOption {
           type = nullOr (strMatching "[0-9]+[.][0-9]+[.][0-9]+");
         };
-        extraArgs = lib.mkOption { type = listOf str; };
+        extraArgs = lib.mkOption {
+          type = listOf str;
+          default = [ ];
+        };
       };
     };
 
