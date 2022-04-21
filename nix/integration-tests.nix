@@ -17,6 +17,7 @@ let
   seed-node = {
     services.mina = {
       enable = true;
+      external-ip = "0.0.0.0";
       extraArgs = [ "--seed" ];
     };
   };
@@ -44,8 +45,7 @@ let
 in {
   module-sanity-check = pkgs.nixosTest {
     name = "sanity-check";
-    nodes.seed_node =
-      [ seed-node-defaults { services.mina.external-ip = "0.0.0.0"; } ];
+    nodes.seed_node = seed-node-defaults;
     testScript = ''
       start_all()
       seed_node.wait_for_unit("mina.service")
