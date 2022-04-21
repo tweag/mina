@@ -152,10 +152,11 @@ let
 
       mina = pkgs.runCommand "mina-release" {
         buildInputs = [ pkgs.makeWrapper ];
-      } ''
-        cp -R ${self.mina_reproducible_commit_info} $out
-        chmod 700 $out -R
-        for i in $(find "$out/bin" -type f); do
+        outputs = self.mina_reproducible_commit_info.outputs;
+      } (map (output: ''
+        cp -R ${self.mina_reproducible_commit_info.${output}} ${placeholder output}
+        chmod 700 ${placeholder output} -R
+        for i in $(find "${placeholder output}/bin" -type f); do
           sed 's/__commit_sha1___________________________/${
             inputs.self.sourceInfo.rev or "<unknown>                               "
           }/' -i "$i"
@@ -164,7 +165,7 @@ let
           }/' -i "$i"
           wrapProgram "$i" --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.gnutar pkgs.gzip ]}
         done
-      '';
+      '') self.mina_reproducible_commit_info.outputs);
 
       mina_tests = runMinaCheck {
         name = "tests";
