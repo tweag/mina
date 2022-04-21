@@ -89,7 +89,7 @@ inputs:
           ${toString (map escapeShellArg cfg.extraArgs)} \
           &
         ${optionalString cfg.waitForRpc
-        "until nc -z 127.0.0.1 ${cfg.client-port}; do sleep 1; done"}
+        "until nc -z 127.0.0.1 ${toString cfg.client-port}; do sleep 1; done"}
       '';
       serviceConfig = {
         PrivateTmp = true;
