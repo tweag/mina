@@ -71,7 +71,6 @@ inputs: pkgs: {
       services.mina = {
         enable = true;
         external-ip = "192.168.1.1";
-        protocol-version = "0.0.0";
         extraArgs = [ "-seed" ];
       };
       time.timeZone = "UTC";
