@@ -126,14 +126,24 @@ let
         '';
 
         buildPhase = ''
-          dune build --display=short src/app/logproc/logproc.exe src/app/cli/src/mina.exe src/app/cli/src/mina_testnet_signatures.exe src/app/cli/src/mina_mainnet_signatures.exe src/app/rosetta/rosetta.exe src/app/rosetta/rosetta_testnet_signatures.exe src/app/rosetta/rosetta_mainnet_signatures.exe -j$NIX_BUILD_CORES
+          dune build --display=short \
+            src/app/logproc/logproc.exe \
+            src/app/cli/src/mina.exe \
+            src/app/cli/src/mina_testnet_signatures.exe \
+            src/app/cli/src/mina_mainnet_signatures.exe \
+            src/app/rosetta/rosetta.exe \
+            src/app/rosetta/rosetta_testnet_signatures.exe \
+            src/app/rosetta/rosetta_mainnet_signatures.exe \
+            src/app/generate_keypair/generate_keypair.exe \
+            src/lib/mina_base/sample_keypairs.json \
+            -j$NIX_BUILD_CORES
           dune exec src/app/runtime_genesis_ledger/runtime_genesis_ledger.exe -- --genesis-dir _build/coda_cache_dir
         '';
 
-        outputs = [ "out" "mainnet" "testnet" "genesis" ];
+        outputs = [ "out" "generate_keypair" "mainnet" "testnet" "genesis" "sample" ];
 
         installPhase = ''
-          mkdir -p $out/bin $mainnet/bin $testnet/bin $genesis/bin $genesis/var/lib/coda
+          mkdir -p $out/bin $sample/share/mina $generate_keypair/bin $mainnet/bin $testnet/bin $genesis/bin $genesis/var/lib/coda
           mv _build/default/src/app/cli/src/mina.exe $out/bin/mina
           mv _build/default/src/app/logproc/logproc.exe $out/bin/logproc
           mv _build/default/src/app/rosetta/rosetta.exe $out/bin/rosetta
@@ -143,7 +153,9 @@ let
           mv _build/default/src/app/cli/src/mina_testnet_signatures.exe $testnet/bin/mina_testnet_signatures
           mv _build/default/src/app/rosetta/rosetta_testnet_signatures.exe $testnet/bin/rosetta_testnet_signatures
           mv _build/coda_cache_dir/genesis* $genesis/var/lib/coda
-          remove-references-to -t $(dirname $(dirname $(command -v ocaml))) {$out/bin/*,$mainnet/bin/*,$testnet/bin*,$genesis/bin/*}
+          mv _build/default/src/lib/mina_base/sample_keypairs.json $sample/share/mina
+          mv _build/default/src/app/generate_keypair/generate_keypair.exe $generate_keypair/bin/generate_keypair
+          remove-references-to -t $(dirname $(dirname $(command -v ocaml))) {$out/bin/*,$mainnet/bin/*,$testnet/bin*,$genesis/bin/*,$generate_keypair/bin/*}
         '';
       } // pkgs.lib.optionalAttrs static { OCAMLPARAM = "_,ccopt=-static"; }
         // pkgs.lib.optionalAttrs pkgs.stdenv.isDarwin {

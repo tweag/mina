@@ -49,6 +49,7 @@
 
             services.mina = {
               enable = true;
+              waitForRpc = false;
               external-ip = "0.0.0.0";
               extraArgs = [ "--seed" ];
             };

@@ -1,6 +1,8 @@
 inputs: pkgs:
 let
-  mina = import ./modules/mina.nix inputs;
+  mina = inputs.self.packages.${pkgs.system}.default;
+
+  mina' = import ./modules/mina.nix inputs;
 
   # Override the nixpkgs-provided defaults
   inherit (pkgs.lib) mkOverride carthesianProductOfSets;
@@ -22,19 +24,35 @@ let
     };
   };
 
-  seed-node-defaults = { imports = [ defaults mina seed-node ]; };
+  seed-node-defaults = { imports = [ defaults mina' seed-node ]; };
 
-  block-producer = {
-    services.mina = {
-      enable = true;
-      peers = [
-        "/dns4/seed-one.genesis-redux.o1test.net/tcp/10002/p2p/12D3KooWP7fTKbyiUcYJGajQDpCFo2rDexgTHFJTxCH8jvcL1eAH"
-        "/dns4/seed-two.genesis-redux.o1test.net/tcp/10002/p2p/12D3KooWL9ywbiXNfMBqnUKHSB1Q1BaHFNUzppu6JLMVn9TTPFSA"
-      ];
+  block-producer =
+    let block-producer-key = "/var/lib/mina/keys/block-producer-key";
+    in {
+      environment.systemPackages = [ mina ];
+      services.mina = {
+        enable = true;
+        extraArgs = [ "--block-producer-key" block-producer-key ];
+      };
+      systemd.services.mina = {
+        environment.MINA_PRIVKEY_PASS = "naughty blue worm";
+        preStart = ''
+          if [ ! -f ${block-producer-key} ]; then
+            mkdir -p $(dirname ${block-producer-key})
+            ${mina.generate_keypair}/bin/generate_keypair --privkey-path ${block-producer-key}
+            chmod 600 ${block-producer-key}
+            chmod 700 $(dirname ${block-producer-key})
+          fi
+        '';
+        postStart = ''
+          mina accounts import \
+            --config-directory /var/lib/mina \
+            --privkey-path ${block-producer-key}
+        '';
+      };
     };
-  };
 
-  block-producer-defaults = { imports = [ defaults mina block-producer ]; };
+  block-producer-defaults = { imports = [ defaults mina' block-producer ]; };
 
   # Kind of a dirty hack, but what can you do...
   # This allows internet access inside the test VMs by using a fixed-output derivation which expects output "nonce"
@@ -62,26 +80,25 @@ in {
       start_all()
       seed_node.wait_for_unit("mina.service")
       seed_node.succeed(
-          '${
-            inputs.self.packages.${pkgs.system}.default
-          }/bin/mina client status'
+          '${mina}/bin/mina client status'
       )
     '';
   };
 
   gossip-consistency = networkedTestNarHash (pkgs.nixosTest {
     name = "gossip-consistency";
-    nodes.node1.imports = [
+    nodes.node1.imports =
+      [ block-producer-defaults { services.mina.extraArgs = [ "--seed" ]; } ];
+    nodes.node2.imports = [
       block-producer-defaults
-      {
-        environment.systemPackages =
-          [ inputs.self.packages.${pkgs.system}.default ];
-      }
+      { services.mina.peers = [ "/dns4/node1/tcp/8302/12D3KooWNG8JcntzQsRmLWK29oyG8nEVMBjT3VLd3FHjTm78u8ZG" ]; }
     ];
     testScript = ''
       start_all()
       node1.wait_for_unit("mina.service")
-      node1.succeed('mina client status')
+      node2.wait_for_unit("mina.service")
+
+      node2.succeed("mina client send-payment --amount 10000000 --fee 10000000 --receiver node1")
     '';
   });
 
