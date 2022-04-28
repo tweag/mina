@@ -56,7 +56,7 @@ inputs:
           default = false;
         };
         peers = lib.mkOption {
-          type = listOf (strMatching "/[^/]+/[^/]+/[^/]+/[^/]+/[^/]+/[^/]+");
+          type = listOf str;
           default = [ ];
         };
 

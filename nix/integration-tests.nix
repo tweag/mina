@@ -35,10 +35,10 @@ let
         extraArgs = [ "--block-producer-key" block-producer-key ];
       };
       systemd.services.mina = {
-        environment.MINA_PRIVKEY_PASS = "naughty blue worm";
+        environment.MINA_PRIVKEY_PASS = "";
         preStart = ''
           if [ ! -f ${block-producer-key} ]; then
-            mkdir -p $(dirname ${block-producer-key})
+            install -D -m 0600 ${./libp2p.key1} /var/lib/mina/keys/libp2p.key
             ${mina.generate_keypair}/bin/generate_keypair --privkey-path ${block-producer-key}
             chmod 600 ${block-producer-key}
             chmod 700 $(dirname ${block-producer-key})
@@ -85,21 +85,45 @@ in {
     '';
   };
 
-  gossip-consistency = networkedTestNarHash (pkgs.nixosTest {
+  gossip-consistency = pkgs.nixosTest {
     name = "gossip-consistency";
-    nodes.node1.imports =
-      [ block-producer-defaults { services.mina.extraArgs = [ "--seed" ]; } ];
+    nodes.node1.imports = [
+      block-producer-defaults
+      {
+        services.mina.extraArgs =
+          [ "--seed" "--discovery-keypair" "/var/lib/mina/keys/libp2p.key" "--external-ip" "192.168.1.1" ];
+          systemd.services.mina = {
+            environment.MINA_LIBP2P_PASS = "12345";
+            environment.RUN_DEMO = "true";
+          };
+      }
+    ];
     nodes.node2.imports = [
       block-producer-defaults
-      { services.mina.peers = [ "/dns4/node1/tcp/8302/12D3KooWNG8JcntzQsRmLWK29oyG8nEVMBjT3VLd3FHjTm78u8ZG" ]; }
+      {
+        services.mina = {
+          peers = [
+            "/dns4/node1/tcp/8302/p2p/12D3KooWANskWCcNzay8uERkBaPXJpZjjVw29t7ZTZiKXhdHgxis"
+          ];
+          extraArgs = [ "--external-ip" "192.168.1.2" ];
+        };
+      }
     ];
     testScript = ''
-      start_all()
+      node1.start()
       node1.wait_for_unit("mina.service")
+      node2.start()
       node2.wait_for_unit("mina.service")
 
-      node2.succeed("mina client send-payment --amount 10000000 --fee 10000000 --receiver node1")
+      node2.succeed("mina accounts create")
+      accounts = node2.succeed("mina accounts list");
+
+      print(accounts)
+
+      account = "B62qiZfzW27eavtPrnF6DeDSAKEjXuGFdkouC3T5STRa6rrYLiDUP2p"
+
+      node1.succeed("mina client send-payment --amount 10000000 --fee 10000000 --sender B62qiZfzW27eavtPrnF6DeDSAKEjXuGFdkouC3T5STRa6rrYLiDUP2p --receiver "+account)
     '';
-  });
+  };
 
 }
