@@ -119,7 +119,7 @@ let
         MINA_ROCKSDB = "${pkgs.rocksdb}/lib/librocksdb.a";
         GO_CAPNP_STD = "${pkgs.go-capnproto2.src}/std";
 
-        MARLIN_PLONK_STUBS = "${pkgs.marlin_plonk_bindings_stubs}/lib";
+        MARLIN_PLONK_STUBS = "${pkgs.kimchi_bindings_stubs}/lib";
         configurePhase = ''
           export MINA_ROOT="$PWD"
           patchShebangs .
@@ -135,7 +135,6 @@ let
             src/app/rosetta/rosetta_testnet_signatures.exe \
             src/app/rosetta/rosetta_mainnet_signatures.exe \
             src/app/generate_keypair/generate_keypair.exe \
-            src/lib/mina_base/sample_keypairs.json \
             -j$NIX_BUILD_CORES
           dune exec src/app/runtime_genesis_ledger/runtime_genesis_ledger.exe -- --genesis-dir _build/coda_cache_dir
         '';

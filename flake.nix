@@ -198,7 +198,7 @@
           };
         };
         # packages.mina_static = ocamlPackages_static.mina;
-        packages.marlin_plonk_bindings_stubs = pkgs.marlin_plonk_bindings_stubs;
+        packages.kimchi_bindings_stubs = pkgs.kimchi_bindings_stubs;
         packages.go-capnproto2 = pkgs.go-capnproto2;
         packages.libp2p_helper = pkgs.libp2p_helper;
         packages.mina_integration_tests = ocamlPackages.mina_integration_tests;

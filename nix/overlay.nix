@@ -78,8 +78,26 @@ in {
     rustc = final.rust-musl;
   };
 
-  # Dependencies which aren't in nixpkgs and local packages which need networking to build
+  rustPlatform-latest = prev.makeRustPlatform {
+    cargo = final.rustChannels.stable.rust;
+    rustc = final.rustChannels.stable.rust;
+  };
 
+  # Dependencies which aren't in nixpkgs and local packages which need networking to build
+  kimchi_bindings_stubs = (if pkgs.stdenv.hostPlatform.isMusl then
+    pkgs.rustPlatform-musl
+  else
+    pkgs.rustPlatform-latest).buildRustPackage {
+      pname = "kimchi_bindings_stubs";
+      version = "0.1.0";
+      src = ../src/lib/crypto;
+      nativeBuildInputs = [ pkgs.ocamlPackages_mina.ocaml ];
+      #sourceRoot = "stubs";
+      # postUnpack = ''
+      #   export sourceRoot=crypto/kimchi_bindings/stubs
+      # '';
+      cargoLock.lockFile = ../src/lib/crypto/Cargo.lock;
+    };
 
   go-capnproto2 = pkgs.buildGoModule rec {
     pname = "capnpc-go";
@@ -106,10 +124,6 @@ in {
       cp go.mod go.sum *.go $out/
     '';
   };
-
-  # todo: kimchi
-  sodium-static =
-    pkgs.libsodium.overrideAttrs (o: { dontDisableStatic = true; });
 
   # Jobs/Test/Libp2pUnitTest
   libp2p_helper = pkgs.buildGoModule {
