@@ -152,7 +152,7 @@ let
           mv _build/default/src/app/cli/src/mina_testnet_signatures.exe $testnet/bin/mina_testnet_signatures
           mv _build/default/src/app/rosetta/rosetta_testnet_signatures.exe $testnet/bin/rosetta_testnet_signatures
           mv _build/coda_cache_dir/genesis* $genesis/var/lib/coda
-          mv _build/default/src/lib/mina_base/sample_keypairs.json $sample/share/mina
+          #mv _build/default/src/lib/mina_base/sample_keypairs.json $sample/share/mina
           mv _build/default/src/app/generate_keypair/generate_keypair.exe $generate_keypair/bin/generate_keypair
           remove-references-to -t $(dirname $(dirname $(command -v ocaml))) {$out/bin/*,$mainnet/bin/*,$testnet/bin*,$genesis/bin/*,$generate_keypair/bin/*}
         '';
