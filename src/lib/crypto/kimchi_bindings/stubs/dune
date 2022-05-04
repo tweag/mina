@@ -5,6 +5,7 @@
 ;; Ignore target if it exists locally
 
 (rule
+ (enabled_if (= %{env:MARLIN_PLONK_STUBS=n} n))
  (targets libwires_15_stubs.a)
  (deps
   Cargo.toml
@@ -21,6 +22,11 @@
     "-C target-feature=+bmi2,+adx"
     (run cargo build --release)))
    (run cp ./target/release/libwires_15_stubs.a .))))
+
+;; copy from $MARLIN_PLONK_STUBS if this exists
+(copy_files
+  (enabled_if (<> %{env:MARLIN_PLONK_STUBS=n} n))
+  (files %{env:MARLIN_PLONK_STUBS=n}/libwires_15_stubs.a))
 
 ;; libraries
 
@@ -64,6 +70,7 @@
 
 (rule
  (targets kimchi_types.ml pasta_bindings.ml kimchi_bindings.ml)
+ (enabled_if (= %{env:MARLIN_PLONK_STUBS=n} n))
  (mode promote)
  (deps
   Cargo.toml
@@ -75,7 +82,16 @@
   (chdir
    binding_generation
    (progn
-    (run rm -rf ./target)
-    (run rm -f ./Cargo.lock)
     (run cargo run %{targets})
     (run ocamlformat -i %{targets})))))
+
+;; run from $MARLIN_PLONK_STUBS if this exists
+(rule
+ (targets kimchi_types.ml pasta_bindings.ml kimchi_bindings.ml)
+ (enabled_if (<> %{env:MARLIN_PLONK_STUBS=n} n))
+ (mode promote)
+ (deps ../../../../.ocamlformat)
+ (action
+  (progn
+   (run %{env:MARLIN_PLONK_STUBS=n}/../bin/binding_generation %{targets})
+   (run ocamlformat -i %{targets}))))
