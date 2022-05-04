@@ -112,7 +112,7 @@ let
 
         buildInputs = ocaml-libs ++ external-libs;
         nativeBuildInputs =
-          [ self.dune self.ocamlfind pkgs.capnproto pkgs.removeReferencesTo ]
+          [ self.dune self.ocamlfind pkgs.capnproto pkgs.removeReferencesTo pkgs.fd ]
           ++ ocaml-libs;
 
         # todo: slimmed rocksdb
@@ -122,7 +122,9 @@ let
         MARLIN_PLONK_STUBS = "${pkgs.kimchi_bindings_stubs}/lib";
         configurePhase = ''
           export MINA_ROOT="$PWD"
-          patchShebangs .
+          export -f patchShebangs stopNest isScript
+          fd . --type executable -x bash -c "patchShebangs {}"
+          export -n patchShebangs stopNest isScript
         '';
 
         buildPhase = ''
@@ -135,6 +137,7 @@ let
             src/app/rosetta/rosetta_testnet_signatures.exe \
             src/app/rosetta/rosetta_mainnet_signatures.exe \
             src/app/generate_keypair/generate_keypair.exe \
+            src/app/runtime_genesis_ledger/runtime_genesis_ledger.exe \
             -j$NIX_BUILD_CORES
           dune exec src/app/runtime_genesis_ledger/runtime_genesis_ledger.exe -- --genesis-dir _build/coda_cache_dir
         '';
