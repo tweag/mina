@@ -211,6 +211,7 @@
 
         devShell = ocamlPackages.mina-dev;
         devShells.default = ocamlPackages.mina-dev;
+        # TODO: think about rust toolchain in the dev shell
         packages.impure-shell =
           (import ./nix/impure-shell.nix pkgs).inputDerivation;
         devShells.impure = import ./nix/impure-shell.nix pkgs;

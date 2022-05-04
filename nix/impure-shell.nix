@@ -17,6 +17,7 @@ pkgs.mkShell {
     zlib.dev
     bzip2.dev
     ncurses
+    crypto-rust-toolchain.rust
   ];
   OPAMSWITCH = "mina";
   shellHook = ''
