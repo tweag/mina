@@ -29,8 +29,8 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/shirou/gopsutil/v3 v3.21.11
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
-	libp2p_ipc v0.0.0
+	github.com/tinylib/msgp v1.1.6 // indirect
+	golang.org/x/crypto v0.1.0
 )
 
 replace libp2p_ipc => ../../../libp2p_ipc
